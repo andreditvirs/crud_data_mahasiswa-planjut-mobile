@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/txtVNama"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/poppins_regular"
+        android:layout_alignParentLeft="true"
+        android:paddingTop="4dp"
+        android:layout_weight="8"
+        android:textSize="16sp"
+        android:maxLines="1"
+        android:maxLength="18"
+        android:text="Nama"
+        android:textAlignment="textStart"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"  />
+
+    <TextView
+        android:textStyle="bold"
+        android:id="@+id/txtVUpdate"
+        android:fontFamily="@font/poppins_regular"
+        android:background="@drawable/round_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/txtVDelete"
+        android:layout_toLeftOf="@+id/txtVDelete"
+        android:layout_toStartOf="@+id/txtVDelete"
+        android:padding="5dp"
+        android:text="Ubah"
+        android:textSize="12dp"
+        android:textColor="@color/colorLight" />
+    <TextView
+        android:textStyle="bold"
+        android:background="@drawable/round_right"
+        android:id="@+id/txtVDelete"
+        android:fontFamily="@font/poppins_regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="5dp"
+        android:text="Hapus"
+        android:textSize="12sp"
+        android:textColor="@color/colorLight" />
+</RelativeLayout>
