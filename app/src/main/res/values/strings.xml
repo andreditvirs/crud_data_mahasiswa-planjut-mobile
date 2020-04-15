@@ -3,4 +3,9 @@
     <string name="string_choose_file">Choose Image</string>
     <string name="string_upload_image">Upload Image</string>
     <string name="string_view_image">View Image</string>
+    <string name="nav_beranda">Beranda</string>
+    <string name="nav_list">Daftar Mahasiswa</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

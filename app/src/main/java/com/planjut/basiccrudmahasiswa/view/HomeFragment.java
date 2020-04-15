@@ -6,24 +6,28 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.loader.content.CursorLoader;
+
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.loader.content.CursorLoader;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.planjut.basiccrudmahasiswa.R;
@@ -50,14 +54,22 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+import static android.app.Activity.RESULT_OK;
 
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link HomeFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class HomeFragment extends Fragment {
     private static final int CODE_GET_REQUEST = 1024;
     private static final int CODE_POST_REQUEST = 1025;
 
     EditText editTextId;
-    TextInputEditText txtINama, txtIAlamat, txtIETTmpLahir, txtIETTglLahir;
+    TextInputEditText txtINrp, txtINama, txtIAlamat, txtIETTmpLahir, txtIETTglLahir;
+    TextView txtVImageName;
     ProgressBar progressBar;
+    ScrollView scrollView;
     ListView listView;
     Button buttonAddUpdate;
 
@@ -70,19 +82,31 @@ public class MainActivity extends AppCompatActivity {
     Button btnUpload;
     String imagePath;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public HomeFragment() {
+        // Required empty public constructor
+    }
 
-        editTextId = findViewById(R.id.edTxtMahasiswaId);
-        txtINama = findViewById(R.id.txtINama);
-        txtIAlamat = findViewById(R.id.txtIAlamat);
-        txtIETTmpLahir = findViewById(R.id.txtIETTmpLahir);
-        txtIETTglLahir = findViewById(R.id.txtIETTglLahir);
-        buttonAddUpdate = findViewById(R.id.buttonAddUpdate);
-        progressBar = findViewById(R.id.progressBar);
-        listView = findViewById(R.id.lViewMahasiswa);
+    public static HomeFragment newInstance(String param1, String param2) {
+        HomeFragment fragment = new HomeFragment();
+        Bundle args = new Bundle();
+        return fragment;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_home, container, false);
+        editTextId = rootView.findViewById(R.id.edTxtMahasiswaId);
+        txtINrp = rootView.findViewById(R.id.txtINrp);
+        txtINama = rootView.findViewById(R.id.txtINama);
+        txtIAlamat = rootView.findViewById(R.id.txtIAlamat);
+        txtIETTmpLahir = rootView.findViewById(R.id.txtIETTmpLahir);
+        txtIETTglLahir = rootView.findViewById(R.id.txtIETTglLahir);
+        txtVImageName = rootView.findViewById(R.id.txtVFoto);
+        buttonAddUpdate = rootView.findViewById(R.id.buttonAddUpdate);
+        progressBar = rootView.findViewById(R.id.progressBar);
+        listView = rootView.findViewById(R.id.lViewMahasiswa);
+        scrollView = rootView.findViewById(R.id.scVListMahasiswa);
         mahasiswaList = new ArrayList<>();
 
         buttonAddUpdate.setOnClickListener(new View.OnClickListener() {
@@ -98,8 +122,8 @@ public class MainActivity extends AppCompatActivity {
         readMahasiswa();
 
         // Retrofit Area
-        btnChooseFile = findViewById(R.id.btnChooseFile);
-        btnUpload = findViewById(R.id.btnUpload);
+        btnChooseFile = rootView.findViewById(R.id.btnChooseFile);
+//        btnUpload = rootView.findViewById(R.id.btnUpload);
         fileService = APIUtils.getFileService();
 
         btnChooseFile.setOnClickListener(new View.OnClickListener() {
@@ -110,17 +134,25 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, 0);
             }
         });
-
+        return rootView;
     }
 
     private void createMahasiswa() {
+        String nrp = txtINrp.getText().toString().trim();
         String nama = txtINama.getText().toString().trim();
         String alamat = txtIAlamat.getText().toString().trim();
         String tmpLahir = txtIETTmpLahir.getText().toString().trim();
         String tglLahir = txtIETTglLahir.getText().toString().trim();
+        String imageName = txtVImageName.getText().toString().trim();
+
         if (TextUtils.isEmpty(nama)) {
             txtINama.setError("Silahkan masukkan nama");
             txtINama.requestFocus();
+            return;
+        }
+        if (TextUtils.isEmpty(nrp)){
+            txtINrp.setError("Silahkan masukkan nrp");
+            txtINrp.requestFocus();
             return;
         }
         if (TextUtils.isEmpty(alamat)) {
@@ -138,13 +170,15 @@ public class MainActivity extends AppCompatActivity {
             txtIETTglLahir.requestFocus();
             return;
         }
-
+        if (TextUtils.isEmpty(imageName) || txtVImageName.getText().equals("Upload foto terlebih dahulu!")) {
+            txtVImageName.setText("Upload foto terlebih dahulu!");
+            return;
+        }
         // Retrofit dulu ,baru ditankap nama buat database
         File file = new File(imagePath);
         RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestBody);
         RequestBody filename = RequestBody.create(MediaType.parse("text/plain"), file.getName());
-
         Call<FotoMahasiswa> call = fileService.upload(body, filename);
         call.enqueue(new Callback<FotoMahasiswa>() {
             @Override
@@ -156,24 +190,27 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<FotoMahasiswa> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "ERROR! : " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "ERROR! : " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
         HashMap<String, String> params = new HashMap<>();
+        params.put("nrp", nrp);
         params.put("nama", nama);
         params.put("alamat", alamat);
         params.put("tmpLahir", tmpLahir);
         params.put("tglLahir", tglLahir);
         params.put("imageName", file.getName());
 
-        PerformNetworkRequest request = new PerformNetworkRequest(ApiMahasiswa.URL_CREATE, params, CODE_POST_REQUEST);
+        HomeFragment.PerformNetworkRequest request = new HomeFragment.PerformNetworkRequest(ApiMahasiswa.URL_CREATE, params, CODE_POST_REQUEST);
         request.execute();
 
+        txtINrp.setText("");
         txtINama.setText("");
         txtIAlamat.setText("");
         txtIETTmpLahir.setText("");
         txtIETTglLahir.setText("");
+        txtVImageName.setText("");
     }
 
     public class PerformNetworkRequest extends AsyncTask<Void, Void, String> {
@@ -202,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject object = new JSONObject(s);
                 if (!object.getBoolean("error")) {
-                    Toast.makeText(getApplicationContext(), object.getString("message"), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), object.getString("message"), Toast.LENGTH_LONG).show();
                     refreshMahasiswaList(object.getJSONArray("mahasiswa"));
                 }
             } catch (JSONException e) {
@@ -228,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
         List<Mahasiswa> mahasiswaList;
 
         public MahasiswaAdapter(List<Mahasiswa> mahasiswaList) {
-            super(MainActivity.this, R.layout.layout_mahasiwa_list, mahasiswaList);
+            super(getActivity(), R.layout.layout_mahasiwa_list, mahasiswaList);
             this.mahasiswaList = mahasiswaList;
         }
 
@@ -245,24 +282,20 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     isUpdating = true;
                     editTextId.setText(String.valueOf(mahasiswa.getId()));
+                    txtINrp.setText(mahasiswa.getNrp());
                     txtINama.setText(mahasiswa.getNama());
                     txtIAlamat.setText(mahasiswa.getAlamat());
                     txtIAlamat.setText(mahasiswa.getAlamat());
                     txtIETTmpLahir.setText(mahasiswa.getTmpLahir());
                     txtIETTglLahir.setText(mahasiswa.getTglLahir());
+                    txtVImageName.setText(mahasiswa.getImageName());
                     buttonAddUpdate.setText("Perbaharui Data");
                 }
             });
             textViewDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    buttonAddUpdate.setText("Tambahkan Data");
-                    txtINama.setText("");
-                    txtIAlamat.setText("");
-                    txtIETTmpLahir.setText("");
-                    txtIETTglLahir.setText("");
-                    isUpdating = false;
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder.setTitle("Hapus " + mahasiswa.getNama())
                             .setMessage("Apakah Anda yakin ingin menghapusnya?")
                             .setPositiveButton("Ya", new DialogInterface.OnClickListener() {
@@ -286,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readMahasiswa() {
-        PerformNetworkRequest request = new PerformNetworkRequest(ApiMahasiswa.URL_READ, null, CODE_GET_REQUEST);
+        HomeFragment.PerformNetworkRequest request = new HomeFragment.PerformNetworkRequest(ApiMahasiswa.URL_READ, null, CODE_GET_REQUEST);
         request.execute();
     }
 
@@ -304,23 +337,34 @@ public class MainActivity extends AppCompatActivity {
                     obj.getString("imageName")
             ));
         }
-        Log.d(MainActivity.class.getSimpleName(), mahasiswaList.toString());
-        MahasiswaAdapter adapter = new MahasiswaAdapter(mahasiswaList);
+        Log.d(HomeFragment.class.getSimpleName(), mahasiswaList.toString());
+        HomeFragment.MahasiswaAdapter adapter = new HomeFragment.MahasiswaAdapter(mahasiswaList);
         listView.setAdapter(adapter);
+        setListViewHeightBasedOnChildren(listView);
+
     }
 
     private void updateMahasiswa() {
         String id = editTextId.getText().toString().trim();
+        String nrp = txtINrp.getText().toString().trim();
         String nama = txtINama.getText().toString().trim();
         String alamat = txtIAlamat.getText().toString().trim();
         String tmpLahir = txtIETTmpLahir.getText().toString().trim();
         String tglLahir = txtIETTglLahir.getText().toString().trim();
+        String imageName = txtVImageName.getText().toString().trim();
 
         if (TextUtils.isEmpty(nama)) {
             txtINama.setError("Silahkan masukkan nama");
             txtINama.requestFocus();
             return;
         }
+
+        if (TextUtils.isEmpty(nrp)) {
+            txtINama.setError("Silahkan masukkan nama");
+            txtINama.requestFocus();
+            return;
+        }
+
         if (TextUtils.isEmpty(alamat)) {
             txtIAlamat.setError("Silahkan masukkan alamat");
             txtIAlamat.requestFocus();
@@ -336,13 +380,15 @@ public class MainActivity extends AppCompatActivity {
             txtIETTglLahir.requestFocus();
             return;
         }
-
+        if (TextUtils.isEmpty(imageName) || txtVImageName.getText().equals("Upload foto terlebih dahulu!")) {
+            txtVImageName.setText("Upload foto terlebih dahulu!");
+            return;
+        }
         // Retrofit dulu ,baru ditankap nama buat database
         File file = new File(imagePath);
         RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestBody);
         RequestBody filename = RequestBody.create(MediaType.parse("text/plain"), file.getName());
-
         Call<FotoMahasiswa> call = fileService.upload(body, filename);
         call.enqueue(new Callback<FotoMahasiswa>() {
             @Override
@@ -354,60 +400,102 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<FotoMahasiswa> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "ERROR! : " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "ERROR! : " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
         HashMap<String, String> params = new HashMap<>();
         params.put("id", id);
+        params.put("nrp", nrp);
         params.put("nama", nama);
         params.put("alamat", alamat);
         params.put("tmpLahir", tmpLahir);
         params.put("tglLahir", tglLahir);
         params.put("imageName", file.getName());
 
-        PerformNetworkRequest request = new PerformNetworkRequest(ApiMahasiswa.URL_UPDATE, params, CODE_POST_REQUEST);
+        HomeFragment.PerformNetworkRequest request = new HomeFragment.PerformNetworkRequest(ApiMahasiswa.URL_UPDATE, params, CODE_POST_REQUEST);
         request.execute();
 
         buttonAddUpdate.setText("Tambahkan Data");
+        txtINrp.setText("");
         txtINama.setText("");
         txtIAlamat.setText("");
         txtIETTmpLahir.setText("");
         txtIETTglLahir.setText("");
+        txtVImageName.setText("");
 
         isUpdating = false;
     }
 
     private void deleteMahasiswa(int id) {
-        PerformNetworkRequest request = new PerformNetworkRequest(ApiMahasiswa.URL_DELETE + id, null, CODE_GET_REQUEST);
+        buttonAddUpdate.setText("Tambahkan Data");
+        txtINrp.setText("");
+        txtINama.setText("");
+        txtIAlamat.setText("");
+        txtIETTmpLahir.setText("");
+        txtIETTglLahir.setText("");
+        txtVImageName.setText("");
+
+        isUpdating = false;
+        HomeFragment.PerformNetworkRequest request = new HomeFragment.PerformNetworkRequest(ApiMahasiswa.URL_DELETE + id, null, CODE_GET_REQUEST);
         request.execute();
     }
 
     //Retrofit Area
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(resultCode == RESULT_OK){
             if (data == null){
-                Toast.makeText(this, "Unable to choose image!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Unable to choose image!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             Uri imageUri = data.getData();
             imagePath = getRealPathFromUri(imageUri);
+            File file = new File(imagePath);
+            txtVImageName.setText(file.getName());
         }
     }
 
     private String getRealPathFromUri(Uri uri){
         String[] projection = {MediaStore.Images.Media.DATA};
-        CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, null, null);
+        CursorLoader loader = new CursorLoader(getContext(), uri, projection, null, null, null);
         Cursor cursor = loader.loadInBackground();
         int column_idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         String result = cursor.getString(column_idx);
         cursor.close();
         return result;
+    }
+
+    public static void setListViewHeightBasedOnChildren
+            (ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) return;
+
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(),
+                View.MeasureSpec.UNSPECIFIED);
+        int totalHeight = 0;
+        View view = null;
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            view = listAdapter.getView(i, view, listView);
+            if (i == 0) view.setLayoutParams(new
+                    ViewGroup.LayoutParams(desiredWidth,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += view.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+
+        params.height = totalHeight + (listView.getDividerHeight() *
+                (listAdapter.getCount() - 1));
+
+        listView.setLayoutParams(params);
+        listView.requestLayout();
     }
 }
