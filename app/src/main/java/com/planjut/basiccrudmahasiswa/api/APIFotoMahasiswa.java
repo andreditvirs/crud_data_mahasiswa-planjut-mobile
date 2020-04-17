@@ -3,8 +3,8 @@ package com.planjut.basiccrudmahasiswa.api;
 import com.planjut.basiccrudmahasiswa.controller.FileService;
 import com.planjut.basiccrudmahasiswa.controller.RetrofitClient;
 
-public class APIUtils {
-    private APIUtils(){
+public class APIFotoMahasiswa {
+    private APIFotoMahasiswa(){
 
     }
 

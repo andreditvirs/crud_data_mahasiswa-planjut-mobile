@@ -13,7 +13,7 @@
         android:id="@+id/logo_of_splash_activity"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:src="@mipmap/logo_biodata_mahasiswa"
+        android:src="@mipmap/logo_biodata_mahasiswa_loading"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:contentDescription="Logo Splash Screen"

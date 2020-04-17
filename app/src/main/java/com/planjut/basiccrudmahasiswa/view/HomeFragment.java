@@ -16,7 +16,6 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -31,7 +30,7 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.planjut.basiccrudmahasiswa.R;
-import com.planjut.basiccrudmahasiswa.api.APIUtils;
+import com.planjut.basiccrudmahasiswa.api.APIFotoMahasiswa;
 import com.planjut.basiccrudmahasiswa.api.ApiMahasiswa;
 import com.planjut.basiccrudmahasiswa.api.RequestHandler;
 import com.planjut.basiccrudmahasiswa.controller.FileService;
@@ -56,11 +55,6 @@ import retrofit2.Response;
 
 import static android.app.Activity.RESULT_OK;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link HomeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class HomeFragment extends Fragment {
     private static final int CODE_GET_REQUEST = 1024;
     private static final int CODE_POST_REQUEST = 1025;
@@ -123,8 +117,7 @@ public class HomeFragment extends Fragment {
 
         // Retrofit Area
         btnChooseFile = rootView.findViewById(R.id.btnChooseFile);
-//        btnUpload = rootView.findViewById(R.id.btnUpload);
-        fileService = APIUtils.getFileService();
+        fileService = APIFotoMahasiswa.getFileService();
 
         btnChooseFile.setOnClickListener(new View.OnClickListener() {
             @Override

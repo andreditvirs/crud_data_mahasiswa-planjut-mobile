@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Daftar \nMahasiswa"
+        android:layout_marginTop="16dp"
         android:minLines="2"
         android:fontFamily="@font/poppins_medium"
         android:textSize="24sp"

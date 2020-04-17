@@ -15,12 +15,11 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.planjut.basiccrudmahasiswa.R;
-import com.planjut.basiccrudmahasiswa.model.ListMahasiswa;
 import com.planjut.basiccrudmahasiswa.model.Mahasiswa;
+import com.planjut.basiccrudmahasiswa.view.adapter.AdapterListMahasiswa;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +28,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.planjut.basiccrudmahasiswa.api.ApiMahasiswa.URL_READ;
+
 public class ListMahasiwaFragment extends Fragment {
 
     RecyclerView mRecyclerView;
@@ -36,8 +37,6 @@ public class ListMahasiwaFragment extends Fragment {
     RecyclerView.LayoutManager mManager;
     RequestQueue mRequest;
     List<Mahasiswa> mList = new ArrayList<Mahasiswa>();
-
-    private final String url = "http://192.168.43.147/clientserver/api/apiMahasiswa.php?apicall=get_mahasiswa";
 
     public ListMahasiwaFragment() {
         // Required empty public constructor
@@ -70,7 +69,7 @@ public class ListMahasiwaFragment extends Fragment {
 
     private void request(){
         mList.clear();
-        JsonObjectRequest requestImage = new JsonObjectRequest(Request.Method.POST, url, null,
+        JsonObjectRequest requestImage = new JsonObjectRequest(Request.Method.POST, URL_READ, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject object) {

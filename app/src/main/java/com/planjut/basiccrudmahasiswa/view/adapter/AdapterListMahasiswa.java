@@ -1,7 +1,6 @@
-package com.planjut.basiccrudmahasiswa.view;
+package com.planjut.basiccrudmahasiswa.view.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.planjut.basiccrudmahasiswa.R;
-import com.planjut.basiccrudmahasiswa.model.ListMahasiswa;
 import com.planjut.basiccrudmahasiswa.model.Mahasiswa;
 
 import java.util.List;
